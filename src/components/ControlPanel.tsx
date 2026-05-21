@@ -10,10 +10,11 @@ interface ControlPanelProps {
 const TYPE_LABELS: Record<ChartType, string> = {
   business: 'Business',
   line: 'Line',
+  scatter: 'Scatter',
   market: 'Market',
 }
 
-const TYPES: ChartType[] = ['business', 'line', 'market']
+const TYPES: ChartType[] = ['business', 'line', 'scatter', 'market']
 
 const numberInputCls =
   'px-3 py-1.5 rounded-lg bg-gray-800/80 border border-gray-700/80 ' +
@@ -36,16 +37,21 @@ export function ControlPanel({
 
   const parsedSize = Number(inputSize)
   const parsedSeed = Number(inputSeed)
-  const maxSize = chartType === 'market' ? 500 : 200000
+  const maxSize = chartType === 'market' ? 500 : 100000
+  const breakerActive = parsedSize > 200000 && (chartType === 'line' || chartType === 'scatter')
+  const warning = parsedSize > 50000 && parsedSize <= 200000 && (chartType === 'line' || chartType === 'scatter')
   const valid =
     inputSize.trim() !== '' &&
     inputSeed.trim() !== '' &&
     !isNaN(parsedSize) &&
-    parsedSize >= 1000 &&
+    parsedSize >= 1 &&
     parsedSize <= maxSize &&
-    !isNaN(parsedSeed)
+    !isNaN(parsedSeed) &&
+    !breakerActive
 
-  const sliderValue = valid ? parsedSize : 1000
+  const sliderValue = isNaN(parsedSize)
+    ? 1000
+    : Math.max(1000, Math.min(parsedSize, maxSize))
 
   const handleStart = () => {
     if (!valid) return
@@ -114,6 +120,17 @@ export function ControlPanel({
           className={`${numberInputCls} w-16 text-sm`}
         />
       </div>
+
+      {warning && (
+        <span className="text-xs text-amber-400/80">
+          High data count may cause lag
+        </span>
+      )}
+      {breakerActive && (
+        <span className="text-xs text-red-400/80">
+          Circuit breaker: max 200K for line/scatter
+        </span>
+      )}
 
       <button
         onClick={handleStart}

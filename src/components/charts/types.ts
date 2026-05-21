@@ -1,8 +1,8 @@
-import type { BusinessRecord, TimeSeriesPoint, OHLCV } from '../../data/types'
+import type { BusinessRecord, TimeSeriesPoint, XYPoint, OHLCV } from '../../data/types'
 
-export type ChartType = 'business' | 'line' | 'market'
+export type ChartType = 'business' | 'line' | 'scatter' | 'market'
 
-export type AnyChartData = BusinessRecord[] | TimeSeriesPoint[][] | OHLCV[]
+export type AnyChartData = BusinessRecord[] | TimeSeriesPoint[][] | XYPoint[][] | OHLCV[]
 
 export type ZoomHandler = (start: number, end: number) => void
 
