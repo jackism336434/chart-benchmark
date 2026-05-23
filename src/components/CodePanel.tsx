@@ -30,13 +30,14 @@ export function CodePanel({ chartType, libraries }: CodePanelProps) {
           Prism.languages.javascript,
           'javascript'
         )
+        const loc = code ? code.split('\n').length : 0
         return (
           <div
             key={name}
             className="flex flex-col rounded-lg border border-gray-800 bg-gray-950 overflow-hidden"
           >
             <div className={`px-3 py-1.5 text-xs font-medium border-b border-gray-800 ${ACCENT_MAP[accent]}`}>
-              {name} \u2014 {chartType}
+              {name} \u2014 {chartType} <span className="opacity-50 ml-1">{loc} LOC</span>
             </div>
             <pre className="flex-1 overflow-auto p-3 text-[10px] leading-relaxed font-mono" style={{ margin: 0 }}>
               <code dangerouslySetInnerHTML={{ __html: highlighted }} />

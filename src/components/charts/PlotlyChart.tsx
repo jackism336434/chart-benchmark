@@ -18,6 +18,7 @@ export function PlotlyChart({ data, zoomSync, chartType }: ChartProps) {
   const t0Ref = useRef(performance.now())
   const memoryBeforeRef = useRef(getMemorySnapshot())
   const measuredRef = useRef(false)
+  const rafRef = useRef(0)
   const containerIdRef = useRef(`plotly-${Math.random().toString(36).slice(2, 9)}`)
   const perf = useContext(PerfContext)
   const fpsTracker = useFPSTracker()
@@ -81,7 +82,7 @@ export function PlotlyChart({ data, zoomSync, chartType }: ChartProps) {
     }
   }, [data, chartType])
 
-  const handleAfterPlot = useCallback(() => {
+  const measure = useCallback(() => {
     if (!measuredRef.current) {
       measuredRef.current = true
       const memoryAfter = getMemorySnapshot()
@@ -92,6 +93,22 @@ export function PlotlyChart({ data, zoomSync, chartType }: ChartProps) {
       })
     }
   }, [perf])
+
+  const handleAfterPlot = useCallback(() => {
+    measure()
+  }, [measure])
+
+  useEffect(() => {
+    if (measuredRef.current) return
+    let raf1 = requestAnimationFrame(() => {
+      let raf2 = requestAnimationFrame(() => {
+        measure()
+      })
+      rafRef.current = raf2
+    })
+    rafRef.current = raf1
+    return () => cancelAnimationFrame(rafRef.current)
+  }, [data, chartType, measure])
 
   useEffect(() => {
     if (!enableZoom) return

@@ -1,4 +1,4 @@
-import { useRef, useEffect, useMemo, useContext } from 'react'
+import { useRef, useEffect, useMemo, useContext, useCallback } from 'react'
 import * as echarts from 'echarts'
 import {
   toEChartsBarOption,
@@ -106,5 +106,17 @@ export function EChartsChart({ data, zoomSync, chartType }: ChartProps) {
     })
   }, [zoomSync, data, enableZoom])
 
-  return <div ref={containerRef} className="w-full h-full" />
+  const handleMouseDown = useCallback(() => {
+    fpsTracker.start()
+  }, [fpsTracker])
+
+  const handleMouseUp = useCallback(() => {
+    fpsTracker.stop()
+    const { avgFPS, minFPS, fpsSamples } = fpsTracker.getMetrics()
+    if (avgFPS !== null) {
+      perf?.setMetrics({ avgFPS, minFPS, fpsSamples })
+    }
+  }, [fpsTracker, perf])
+
+  return <div ref={containerRef} className="w-full h-full" onMouseDown={handleMouseDown} onMouseUp={handleMouseUp} />
 }

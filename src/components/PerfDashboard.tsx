@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useCallback } from 'react'
 import type { PerfMetrics } from '../hooks/usePerf'
 import { MetricCard } from './MetricCard'
 import { MetricBarChart } from './MetricBarChart'
@@ -17,7 +17,7 @@ interface PerfDashboardProps {
   chartType: string
   open: boolean
   onToggle: () => void
-  autoOpen: boolean
+  memoryAvailable: boolean
 }
 
 function memoryDelta(m: PerfMetrics): number | null {
@@ -38,11 +38,28 @@ export function PerfDashboard({
   chartType,
   open,
   onToggle,
-  autoOpen,
+  memoryAvailable,
 }: PerfDashboardProps) {
-  useEffect(() => {
-    if (autoOpen) onToggle()
-  }, [autoOpen, onToggle])
+  const handleExport = useCallback(() => {
+    const report = {
+      chartType,
+      timestamp: new Date().toISOString(),
+      libraries: libraries.map((lib) => ({
+        name: lib.name,
+        renderTime: lib.metrics.renderTime,
+        avgFPS: lib.metrics.avgFPS,
+        minFPS: lib.metrics.minFPS,
+        memoryDeltaMB: memoryDelta(lib.metrics),
+      })),
+    }
+    const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `benchmark-${chartType}-${Date.now()}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+  }, [chartType, libraries])
 
   return (
     <div
@@ -50,13 +67,23 @@ export function PerfDashboard({
         open ? 'h-80' : 'h-10'
       }`}
     >
-      <button
-        onClick={onToggle}
-        className="w-full h-10 flex items-center justify-center gap-2 text-xs text-gray-500 hover:text-gray-300 transition-colors"
-      >
-        <span className="uppercase tracking-wider font-medium">Performance Dashboard</span>
-        <span className="text-[10px]">{open ? '\u25BC' : '\u25B2'}</span>
-      </button>
+      <div className="h-10 flex items-center justify-center gap-3 shrink-0">
+        <button
+          onClick={onToggle}
+          className="flex items-center gap-2 text-xs text-gray-500 hover:text-gray-300 transition-colors"
+        >
+          <span className="uppercase tracking-wider font-medium">Performance Dashboard</span>
+          <span className="text-[10px]">{open ? '\u25BC' : '\u25B2'}</span>
+        </button>
+        {open && (
+          <button
+            onClick={handleExport}
+            className="text-[10px] uppercase tracking-wider text-gray-500 hover:text-gray-300 transition-colors border border-gray-700 px-2 py-0.5 rounded"
+          >
+            Export JSON
+          </button>
+        )}
+      </div>
 
       {open && (
         <div className="h-[calc(100%-2.5rem)] overflow-auto px-6 py-3 grid grid-cols-12 gap-4">
@@ -91,6 +118,12 @@ export function PerfDashboard({
                 color: lib.color,
               }))}
             />
+            {!memoryAvailable && (
+              <p className="text-[10px] text-amber-400/70">&#9888; Memory metrics require Chrome/Chromium</p>
+            )}
+            {memoryAvailable && (
+              <p className="text-[10px] text-gray-600">Measures global JS heap delta. Negative = GC reclaimed more than allocated.</p>
+            )}
             <MetricBarChart
               title="Avg FPS"
               unit="fps"
@@ -99,6 +132,7 @@ export function PerfDashboard({
                 value: lib.metrics.avgFPS,
                 color: lib.color,
               }))}
+              hint={libraries.every((lib) => lib.metrics.avgFPS == null) ? 'Drag/zoom on charts to measure' : undefined}
             />
             <MetricBarChart
               title="Min FPS"

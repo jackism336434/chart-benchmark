@@ -1,9 +1,12 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import type { ChartType } from './charts/types'
 
 interface ControlPanelProps {
   chartType: ChartType
-  onStart: (size: number, seed: number) => void
+  series: number
+  groups: number
+  onStart: (size: number, seed: number, series: number, groups: number) => void
+  onReset: () => void
   onChartTypeChange: (type: ChartType) => void
 }
 
@@ -29,14 +32,31 @@ const labelCls = 'text-[10px] uppercase tracking-wider text-gray-600'
 
 export function ControlPanel({
   chartType,
+  series,
+  groups,
   onStart,
+  onReset,
   onChartTypeChange,
 }: ControlPanelProps) {
   const [inputSize, setInputSize] = useState('10000')
   const [inputSeed, setInputSeed] = useState('42')
+  const [inputSeries, setInputSeries] = useState(String(series))
+  const [inputGroups, setInputGroups] = useState(String(groups))
+
+  useEffect(() => {
+    setInputSeries(String(series))
+    setInputGroups(String(groups))
+    const max = chartType === 'market' ? 500 : 100000
+    const current = Number(inputSize)
+    if (!isNaN(current) && current > max) {
+      setInputSize(String(max))
+    }
+  }, [chartType])
 
   const parsedSize = Number(inputSize)
   const parsedSeed = Number(inputSeed)
+  const parsedSeries = Number(inputSeries)
+  const parsedGroups = Number(inputGroups)
   const maxSize = chartType === 'market' ? 500 : 100000
   const breakerActive = parsedSize > 200000 && (chartType === 'line' || chartType === 'scatter')
   const warning = parsedSize > 50000 && parsedSize <= 200000 && (chartType === 'line' || chartType === 'scatter')
@@ -47,7 +67,9 @@ export function ControlPanel({
     parsedSize >= 1 &&
     parsedSize <= maxSize &&
     !isNaN(parsedSeed) &&
-    !breakerActive
+    !breakerActive &&
+    (chartType !== 'line' || (parsedSeries >= 1 && parsedSeries <= 5)) &&
+    (chartType !== 'scatter' || (parsedGroups >= 1 && parsedGroups <= 6))
 
   const sliderValue = isNaN(parsedSize)
     ? 1000
@@ -55,7 +77,11 @@ export function ControlPanel({
 
   const handleStart = () => {
     if (!valid) return
-    onStart(parsedSize, parsedSeed)
+    onStart(parsedSize, parsedSeed, parsedSeries, parsedGroups)
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && valid) handleStart()
   }
 
   return (
@@ -89,6 +115,7 @@ export function ControlPanel({
             step={1000}
             value={sliderValue}
             onChange={(e) => setInputSize(e.target.value)}
+            onKeyDown={handleKeyDown}
             className="w-48 h-1 rounded-full appearance-none bg-gray-700 cursor-pointer accent-emerald-500
               [&::-webkit-slider-thumb]:appearance-none
               [&::-webkit-slider-thumb]:w-3.5
@@ -106,20 +133,58 @@ export function ControlPanel({
             value={inputSize}
             onChange={(e) => setInputSize(e.target.value)}
             className={`${numberInputCls} w-24 text-xs`}
+            onKeyDown={handleKeyDown}
           />
         </div>
       </div>
 
       <div className="flex flex-col gap-1.5">
         <span className={labelCls}>Seed</span>
-        <input
-          type="text"
-          inputMode="numeric"
-          value={inputSeed}
-          onChange={(e) => setInputSeed(e.target.value)}
-          className={`${numberInputCls} w-16 text-sm`}
-        />
+        <div className="flex items-center gap-1">
+          <input
+            type="text"
+            inputMode="numeric"
+            value={inputSeed}
+            onChange={(e) => setInputSeed(e.target.value)}
+            className={`${numberInputCls} w-16 text-sm`}
+            onKeyDown={handleKeyDown}
+          />
+          <button
+            onClick={() => setInputSeed(String(Math.floor(Math.random() * 9999) + 1))}
+            className="px-2 py-1.5 rounded-lg bg-gray-800 border border-gray-700/80 text-gray-400 hover:text-emerald-400 hover:border-emerald-500/40 transition-colors"
+            title="Randomize seed"
+          >
+            ↻
+          </button>
+        </div>
       </div>
+
+      {chartType === 'line' && (
+        <div className="flex flex-col gap-1.5">
+          <span className={labelCls}>Series</span>
+          <input
+            type="text"
+            inputMode="numeric"
+            value={inputSeries}
+            onChange={(e) => setInputSeries(e.target.value)}
+            className={`${numberInputCls} w-16 text-sm`}
+            onKeyDown={handleKeyDown}
+          />
+        </div>
+      )}
+      {chartType === 'scatter' && (
+        <div className="flex flex-col gap-1.5">
+          <span className={labelCls}>Groups</span>
+          <input
+            type="text"
+            inputMode="numeric"
+            value={inputGroups}
+            onChange={(e) => setInputGroups(e.target.value)}
+            className={`${numberInputCls} w-16 text-sm`}
+            onKeyDown={handleKeyDown}
+          />
+        </div>
+      )}
 
       {warning && (
         <span className="text-xs text-amber-400/80">
@@ -132,6 +197,12 @@ export function ControlPanel({
         </span>
       )}
 
+      <button
+        onClick={onReset}
+        className="px-4 py-1.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition-colors"
+      >
+        Reset
+      </button>
       <button
         onClick={handleStart}
         disabled={!valid}
