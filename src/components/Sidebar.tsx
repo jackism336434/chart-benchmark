@@ -1,4 +1,5 @@
 import { NavLink } from 'react-router'
+import { APP_VERSION } from '../utils/defaults'
 
 const NAV_ITEMS = [
   { to: '/benchmark', label: 'Benchmark', icon: '⏱' },
@@ -58,7 +59,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       <div className="border-t border-gray-800 px-4 py-3">
         {!collapsed && (
           <p className="text-[10px] text-gray-600">
-            v0.1.0 · Multi-lib benchmark
+            v{APP_VERSION} · Multi-lib benchmark
           </p>
         )}
       </div>
