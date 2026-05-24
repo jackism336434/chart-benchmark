@@ -5,6 +5,7 @@ interface ControlPanelProps {
   chartType: ChartType
   series: number
   groups: number
+  initialSize?: number
   canSave?: boolean
   saved?: boolean
   onStart: (size: number, seed: number, series: number, groups: number) => void
@@ -37,6 +38,7 @@ export function ControlPanel({
   chartType,
   series,
   groups,
+  initialSize,
   canSave,
   saved,
   onStart,
@@ -44,7 +46,7 @@ export function ControlPanel({
   onSave,
   onChartTypeChange,
 }: ControlPanelProps) {
-  const [inputSize, setInputSize] = useState('10000')
+  const [inputSize, setInputSize] = useState(String(initialSize ?? 10000))
   const [inputSeed, setInputSeed] = useState('42')
   const [inputSeries, setInputSeries] = useState(String(series))
   const [inputGroups, setInputGroups] = useState(String(groups))

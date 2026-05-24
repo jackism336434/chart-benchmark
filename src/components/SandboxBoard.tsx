@@ -10,6 +10,7 @@ import { PerfDashboard } from './PerfDashboard'
 import { DEFAULT_PERF } from '../hooks/usePerf'
 import type { PerfMetrics } from '../hooks/usePerf'
 import { saveHistoryEntry } from '../utils/history'
+import { loadDefaultSize, loadDefaultChartType } from '../utils/defaults'
 
 const EChartsChart = lazy(() =>
   import('./charts/EChartsChart').then((m) => ({ default: m.EChartsChart }))
@@ -48,8 +49,8 @@ function computePointCount(chartType: ChartType, data: AnyChartData | null): num
 }
 
 export function SandboxBoard() {
-  const [chartType, setChartType] = useState<ChartType>('line')
-  const [renderSize, setRenderSize] = useState(10000)
+  const [chartType, setChartType] = useState<ChartType>(loadDefaultChartType() as ChartType)
+  const [renderSize, setRenderSize] = useState(loadDefaultSize())
   const [renderSeed, setRenderSeed] = useState(42)
   const [series, setSeries] = useState(2)
   const [groups, setGroups] = useState(3)
@@ -163,6 +164,7 @@ export function SandboxBoard() {
         chartType={chartType}
         series={series}
         groups={groups}
+        initialSize={renderSize}
         canSave={canSave}
         saved={saved}
         onStart={handleStart}
