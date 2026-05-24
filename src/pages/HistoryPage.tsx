@@ -141,7 +141,7 @@ export function HistoryPage() {
                   </button>
                 </div>
               </div>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {entry.libraries.map((lib) => (
                   <div key={lib.name} className="space-y-1">
                     <div className="text-xs font-medium text-gray-400">{lib.name}</div>
