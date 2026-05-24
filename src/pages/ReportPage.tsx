@@ -187,7 +187,17 @@ function SelectionCompare({ entries }: { entries: HistoryEntry[] }) {
 }
 
 function TrendAnalysis({ entries }: { entries: HistoryEntry[] }) {
+  const availableTypes = useMemo(() => {
+    return CHART_TYPES.filter((t) => entries.filter((e) => e.chartType === t).length >= 2)
+  }, [entries])
+
   const [chartType, setChartType] = useState<(typeof CHART_TYPES)[number]>(CHART_TYPES[1])
+
+  useEffect(() => {
+    if (availableTypes.length > 0 && !availableTypes.includes(chartType)) {
+      setChartType(availableTypes[0])
+    }
+  }, [availableTypes])
 
   const filtered = useMemo(() => {
     return entries
