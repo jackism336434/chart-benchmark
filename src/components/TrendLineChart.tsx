@@ -18,7 +18,7 @@ interface TrendLineChartProps {
 
 export type { DataPoint, SeriesConfig, TrendLineChartProps }
 
-const CHART_PADDING = { top: 20, right: 16, bottom: 32, left: 56 }
+const CHART_PADDING = { top: 20, right: 16, bottom: 40, left: 56 }
 
 function niceScale(min: number, max: number, ticks: number): number[] {
   const range = max - min || 1
@@ -41,7 +41,7 @@ function formatNum(n: number): string {
   return n.toFixed(n % 1 === 0 ? 0 : 1)
 }
 
-export function TrendLineChart({ title, series }: TrendLineChartProps) {
+export function TrendLineChart({ title, unit, xLabel, series }: TrendLineChartProps) {
   const allX = [...new Set(series.flatMap((s) => s.points.map((p) => p.x)))].sort((a, b) => a - b)
   const allY = series.flatMap((s) => s.points.filter((p) => p.y != null).map((p) => p.y!))
   const hasData = allX.length > 0 && allY.length > 0
@@ -75,6 +75,9 @@ export function TrendLineChart({ title, series }: TrendLineChartProps) {
     <div className="rounded-lg border border-gray-800 bg-gray-900/60 p-4">
       <div className="text-xs text-gray-500 uppercase tracking-wider mb-2">{title}</div>
       <svg viewBox={`0 0 ${viewBoxWidth} ${viewBoxHeight}`} className="w-full" style={{ maxHeight: '220px' }}>
+        <text x={4} y={CHART_PADDING.top - 4} fill="#9ca3af" fontSize="9" fontFamily="monospace">
+          {unit}
+        </text>
         {yTicks.map((tick) => (
           <g key={tick}>
             <line x1={CHART_PADDING.left} y1={mapY(tick)} x2={viewBoxWidth - CHART_PADDING.right} y2={mapY(tick)} stroke="#1f2937" />
@@ -88,6 +91,9 @@ export function TrendLineChart({ title, series }: TrendLineChartProps) {
             {formatNum(tick)}
           </text>
         ))}
+        <text x={viewBoxWidth / 2} y={viewBoxHeight - 2} textAnchor="middle" fill="#9ca3af" fontSize="9" fontFamily="monospace">
+          {xLabel}
+        </text>
         {series.map((s) => {
           const validPts = s.points.filter((p) => p.y != null) as { x: number; y: number }[]
           if (validPts.length < 2) return null
