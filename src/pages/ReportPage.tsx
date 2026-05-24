@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useSearchParams } from 'react-router'
 import { loadHistory, type HistoryEntry } from '../utils/history'
 import { MetricGroupedBarChart } from '../components/MetricGroupedBarChart'
 import { TrendLineChart } from '../components/TrendLineChart'
@@ -75,8 +76,18 @@ export function ReportPage() {
 }
 
 function SelectionCompare({ entries }: { entries: HistoryEntry[] }) {
+  const [searchParams] = useSearchParams()
   const [typeFilter, setTypeFilter] = useState<ChartTypeFilter>('all')
   const [selected, setSelected] = useState<Set<string>>(new Set())
+
+  useEffect(() => {
+    const selectParam = searchParams.get('select')
+    if (selectParam && selected.size === 0) {
+      const ids = selectParam.split(',')
+      const matching = new Set(ids.filter((id) => entries.some((e) => e.id === id)))
+      if (matching.size > 0) setSelected(matching)
+    }
+  }, [searchParams, entries])
 
   const filtered = useMemo(() => {
     if (typeFilter === 'all') return entries

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
+import { Link } from 'react-router'
 import { loadHistory, deleteHistoryEntry, clearHistory, sortEntries, type HistoryEntry, type SortKey } from '../utils/history'
 
 const CHART_TYPES = ['all', 'business', 'line', 'scatter', 'market'] as const
@@ -124,6 +125,13 @@ export function HistoryPage() {
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="text-xs text-gray-600">{entry.timestamp}</span>
+                  <Link
+                    to={`/report?select=${entry.id}`}
+                    className="text-emerald-400 hover:text-emerald-300 transition-colors text-xs"
+                    title="Compare in Report"
+                  >
+                    Compare
+                  </Link>
                   <button
                     onClick={() => handleDelete(entry.id)}
                     className="text-gray-600 hover:text-red-400 transition-colors text-xs"
