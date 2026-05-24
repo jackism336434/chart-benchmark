@@ -5,8 +5,11 @@ interface ControlPanelProps {
   chartType: ChartType
   series: number
   groups: number
+  canSave?: boolean
+  saved?: boolean
   onStart: (size: number, seed: number, series: number, groups: number) => void
   onReset: () => void
+  onSave?: () => void
   onChartTypeChange: (type: ChartType) => void
 }
 
@@ -34,8 +37,11 @@ export function ControlPanel({
   chartType,
   series,
   groups,
+  canSave,
+  saved,
   onStart,
   onReset,
+  onSave,
   onChartTypeChange,
 }: ControlPanelProps) {
   const [inputSize, setInputSize] = useState('10000')
@@ -203,6 +209,18 @@ export function ControlPanel({
       >
         Reset
       </button>
+      {canSave && onSave && (
+        <button
+          onClick={onSave}
+          className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+            saved
+              ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+              : 'text-gray-400 hover:text-white hover:bg-gray-800 border border-gray-700/80'
+          }`}
+        >
+          {saved ? '✓ Saved' : 'Save'}
+        </button>
+      )}
       <button
         onClick={handleStart}
         disabled={!valid}

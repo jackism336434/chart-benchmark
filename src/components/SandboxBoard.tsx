@@ -9,6 +9,7 @@ import { ErrorBoundary } from './ErrorBoundary'
 import { PerfDashboard } from './PerfDashboard'
 import { DEFAULT_PERF } from '../hooks/usePerf'
 import type { PerfMetrics } from '../hooks/usePerf'
+import { saveHistoryEntry } from '../utils/history'
 
 const EChartsChart = lazy(() =>
   import('./charts/EChartsChart').then((m) => ({ default: m.EChartsChart }))
@@ -111,6 +112,33 @@ export function SandboxBoard() {
     setAutoOpened(false)
   }, [])
 
+  const [saved, setSaved] = useState(false)
+  const handleSave = useCallback(() => {
+    const entry = {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      chartType,
+      dataSize: renderSize,
+      seed: renderSeed,
+      timestamp: new Date().toLocaleString(),
+      libraries: LIBRARY_CONFIG.map((lib, i) => {
+        const m = metrics[i]
+        const delta = m.memoryAfter != null && m.memoryBefore != null
+          ? (m.memoryAfter - m.memoryBefore) / 1024 / 1024
+          : null
+        return {
+          name: lib.name,
+          renderTime: m.renderTime,
+          avgFPS: m.avgFPS,
+          minFPS: m.minFPS,
+          memoryDeltaMB: delta,
+        }
+      }),
+    }
+    saveHistoryEntry(entry)
+    setSaved(true)
+    setTimeout(() => setSaved(false), 1500)
+  }, [chartType, renderSize, renderSeed, metrics])
+
   const handleChartTypeChange = useCallback((type: ChartType) => {
     setChartType(type)
     setSeries(2)
@@ -127,14 +155,19 @@ export function SandboxBoard() {
     </div>
   )
 
+  const canSave = started && hasAnyRenderTime
+
   return (
     <div className="flex flex-col h-full">
       <ControlPanel
         chartType={chartType}
         series={series}
         groups={groups}
+        canSave={canSave}
+        saved={saved}
         onStart={handleStart}
         onReset={handleReset}
+        onSave={handleSave}
         onChartTypeChange={handleChartTypeChange}
       />
 

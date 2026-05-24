@@ -1,18 +1,25 @@
-import { SandboxBoard } from './components/SandboxBoard'
+import { BrowserRouter, Routes, Route } from 'react-router'
+import { LayoutShell } from './components/LayoutShell'
+import { BenchmarkPage } from './pages/BenchmarkPage'
+import { ReportPage } from './pages/ReportPage'
+import { HistoryPage } from './pages/HistoryPage'
+import { SettingsPage } from './pages/SettingsPage'
+import { AboutPage } from './pages/AboutPage'
 
 function App() {
   return (
-    <div className="h-screen flex flex-col bg-gray-950 text-white">
-      <header className="flex-shrink-0 border-b border-gray-800 px-6 py-4">
-        <h1 className="text-xl font-bold tracking-tight">Chart Benchmark</h1>
-        <p className="text-sm text-gray-400 mt-1">
-          Multi-dimensional chart library performance & effect evaluation
-        </p>
-      </header>
-      <main className="flex-1 min-h-0">
-        <SandboxBoard />
-      </main>
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route element={<LayoutShell />}>
+          <Route index element={<BenchmarkPage />} />
+          <Route path="benchmark" element={<BenchmarkPage />} />
+          <Route path="report" element={<ReportPage />} />
+          <Route path="history" element={<HistoryPage />} />
+          <Route path="settings" element={<SettingsPage />} />
+          <Route path="about" element={<AboutPage />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
   )
 }
 
