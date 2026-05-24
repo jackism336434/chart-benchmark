@@ -20,6 +20,10 @@ export class ErrorBoundary extends Component<Props, State> {
     return { hasError: true, error }
   }
 
+  resetErrorBoundary = () => {
+    this.setState({ hasError: false, error: null })
+  }
+
   render() {
     if (this.state.hasError) {
       return (
@@ -31,6 +35,7 @@ export class ErrorBoundary extends Component<Props, State> {
           <div className="text-gray-600 text-[10px] font-mono max-w-md overflow-auto">
             {this.state.error?.message}
           </div>
+          <button onClick={this.resetErrorBoundary} className="px-3 py-1.5 rounded-lg text-xs font-medium bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 hover:bg-emerald-500/30 transition-colors">Retry</button>
         </div>
       )
     }
