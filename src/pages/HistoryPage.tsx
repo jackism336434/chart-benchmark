@@ -1,8 +1,20 @@
-import { useState, useEffect, useCallback } from 'react'
-import { loadHistory, deleteHistoryEntry, clearHistory, type HistoryEntry } from '../utils/history'
+import { useState, useEffect, useCallback, useMemo } from 'react'
+import { loadHistory, deleteHistoryEntry, clearHistory, sortEntries, type HistoryEntry, type SortKey } from '../utils/history'
+
+const CHART_TYPES = ['all', 'business', 'line', 'scatter', 'market'] as const
+type ChartTypeFilter = (typeof CHART_TYPES)[number]
+
+const SORT_OPTIONS: { value: SortKey; label: string }[] = [
+  { value: 'newest', label: 'Newest first' },
+  { value: 'oldest', label: 'Oldest first' },
+  { value: 'size-desc', label: 'Size: Large → Small' },
+  { value: 'size-asc', label: 'Size: Small → Large' },
+]
 
 export function HistoryPage() {
   const [entries, setEntries] = useState<HistoryEntry[]>(loadHistory)
+  const [typeFilter, setTypeFilter] = useState<ChartTypeFilter>('all')
+  const [sortBy, setSortBy] = useState<SortKey>('newest')
 
   const refresh = useCallback(() => setEntries(loadHistory()), [])
 
@@ -24,16 +36,26 @@ export function HistoryPage() {
     refresh()
   }
 
+  const displayEntries = useMemo(() => {
+    let filtered = entries
+    if (typeFilter !== 'all') {
+      filtered = filtered.filter((e) => e.chartType === typeFilter)
+    }
+    return sortEntries(filtered, sortBy)
+  }, [entries, typeFilter, sortBy])
+
+  const hasData = entries.length > 0
+
   return (
     <div className="p-6 max-w-5xl mx-auto">
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold">History</h1>
           <p className="text-sm text-gray-400 mt-1">
             Past benchmark runs stored locally
           </p>
         </div>
-        {entries.length > 0 && (
+        {hasData && (
           <button
             onClick={handleClear}
             className="px-3 py-1.5 rounded-lg text-xs font-medium text-red-400 border border-red-500/30 hover:bg-red-500/10 transition-colors"
@@ -43,7 +65,35 @@ export function HistoryPage() {
         )}
       </div>
 
-      {entries.length === 0 ? (
+      {hasData && (
+        <div className="flex items-center gap-4 mb-4">
+          <select
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value as ChartTypeFilter)}
+            className="px-3 py-1.5 rounded-lg bg-gray-800 border border-gray-700 text-sm text-gray-300 focus:outline-none focus:ring-1 focus:ring-emerald-500/50"
+          >
+            {CHART_TYPES.map((t) => (
+              <option key={t} value={t}>
+                {t === 'all' ? 'All Types' : t.charAt(0).toUpperCase() + t.slice(1)}
+              </option>
+            ))}
+          </select>
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as SortKey)}
+            className="px-3 py-1.5 rounded-lg bg-gray-800 border border-gray-700 text-sm text-gray-300 focus:outline-none focus:ring-1 focus:ring-emerald-500/50"
+          >
+            {SORT_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+          <span className="text-xs text-gray-600">
+            {displayEntries.length} record{displayEntries.length !== 1 ? 's' : ''}
+          </span>
+        </div>
+      )}
+
+      {!hasData ? (
         <div className="flex flex-col items-center justify-center py-24 text-center">
           <div className="text-5xl mb-4 opacity-30">📜</div>
           <h2 className="text-lg font-medium text-gray-400">No history yet</h2>
@@ -51,9 +101,17 @@ export function HistoryPage() {
             Run benchmarks on the <a href="/benchmark" className="text-emerald-400 hover:underline">Benchmark page</a> and save results to see them here.
           </p>
         </div>
+      ) : displayEntries.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-24 text-center">
+          <div className="text-4xl mb-3 opacity-30">🔍</div>
+          <h2 className="text-lg font-medium text-gray-400">No matching records</h2>
+          <p className="text-sm text-gray-600 mt-2">
+            Try changing the filter or run more benchmarks.
+          </p>
+        </div>
       ) : (
         <div className="space-y-3">
-          {entries.map((entry) => (
+          {displayEntries.map((entry) => (
             <div key={entry.id} className="rounded-lg border border-gray-800 bg-gray-900/60 p-4">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">
